@@ -44,6 +44,8 @@ EXTRAS_REQUIRE = {
         "pytest>=4.3.0",  # 4.3.0 dropped last use of `convert`
         "six",
         "zope.interface",
+        "pytest-benchmark",
+        "cached_property",
     ],
 }
 EXTRAS_REQUIRE["dev"] = (
