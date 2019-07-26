@@ -91,7 +91,7 @@ inputs = (
 )
 
 non_input = \
-    (('brockton bay' * 50,),
+    (('october' * 50,),
      [((('last month' * 50,),
         [((('last month' * 50,),
            [((('october' * 50,),
