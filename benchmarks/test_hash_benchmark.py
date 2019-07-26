@@ -51,6 +51,71 @@ approaches = (
 )
 
 inputs = (
+    (('scourge' * 50,),
+     [((('scourge' * 50,),
+        [((('scream' * 50,), []), 7.335484504699707),
+         ((('scourge' * 50,), []), 7.335484504699707)]),
+       37.01687788963318),
+      ((('scuz' * 50,),
+        [((('scuz' * 50,),
+           [((('scuz' * 50,),
+              [((('scuz' * 50,), []), 7.436905860900879),
+               ((('scuz' * 50,), []), 7.436905860900879)]),
+             11.418097972869873),
+            ((('sludge' * 50,), []), 11.418097972869873)]),
+          11.36484432220459),
+         ((('scuz' * 50,), []), 11.36484432220459)]),
+       37.01687788963318)]),
+    (('sleek' * 50,),
+     [((('sleek' * 50,), []), 6.118027687072754),
+      ((('sleek' * 50,), []), 6.118027687072754)]),
+    (('rad' * 50,),
+     [((('rad' * 50,),
+        [((('rad' * 50,), []), 5.02443265914917),
+         ((('rad' * 50,), []), 5.02443265914917)]),
+       4.159373760223389),
+      ((('rad' * 50,), []), 4.159373760223389)]),
+    (('october' * 50,),
+     [((('last month' * 50,),
+        [((('last month' * 50,),
+           [((('october' * 50,),
+              [((('october' * 50,), []), -4.086095333099365),
+               ((('october' * 50,), []), -4.086095333099365)]),
+             -14.481067180633545),
+            ((('last month' * 50,), []), -14.481067180633545)]),
+          -17.800762176513672),
+         ((('october' * 50,),
+           [((('october' * 50,), []), -11.944441795349121),
+            ((('october' * 50,), []), -11.944441795349121)]),
+          -17.800762176513672)]),
+       -12.85853385925293),
+      ((('brockton bay' * 50,),
+        [((('that awful city' * 50,), []), -6.8193039894104),
+         ((('brockton bay' * 50,), []), -6.8193039894104)]),
+       -12.85853385925293)]),
+)
+
+non_input = \
+    (('brockton bay' * 50,),
+     [((('last month' * 50,),
+        [((('last month' * 50,),
+           [((('october' * 50,),
+              [((('october' * 50,), []), -4.086095333099365),
+               ((('october' * 50,), []), -4.086095333099365)]),
+             -14.481067180633545),
+            ((('last month' * 50,), []), -14.481067180633545)]),
+          -17.800762176513672),
+         ((('october' * 50,),
+           [((('october' * 50,), []), -11.944441795349121),
+            ((('septober' * 50,), []), -11.944441795349121)]),
+          -17.800762176513672)]),
+       -12.85853385925293),
+      ((('brockton bay' * 50,),
+        [((('that awful city' * 50,), []), -6.8193039894104),
+         ((('brockton bay' * 50,), []), -6.8193039894104)]),
+       -12.85853385925293)])
+
+input_lists = (
     (
         (('doggo' * 50,), []),
         (('fried rice' * 50,), []),
@@ -161,40 +226,53 @@ def clusterized(clazz, inputs):
     return tuple(make_cluster_from_tuple_tree(clazz, tree) for tree in inputs)
 
 
-@pytest.mark.parametrize("clazz", approaches)
-@pytest.mark.parametrize("inputs", inputs)
-def test_self_equality(clazz, inputs, benchmark):
-    benchmark.name = clazz[0]
-    benchmark.group = f"Collection equality hit"
+def get_input_identifier(input_) -> str:
+    return input_[0][0][:10]
 
-    item = clusterized(clazz[1], inputs)
+
+@pytest.mark.parametrize("clazz", approaches)
+@pytest.mark.parametrize("input_", inputs)
+def test_self_equality(clazz, input_, benchmark):
+    benchmark.name = clazz[0]
+    benchmark.group = f"Equality hit ({get_input_identifier(input_)})"
+
+    item = make_cluster_from_tuple_tree(clazz[1], input_)
+
+    benchmark(check_equality, item, item)
+
+
+@pytest.mark.parametrize("clazz", approaches)
+@pytest.mark.parametrize("input_", inputs)
+def test_self_equality_prehashing(clazz, input_, benchmark):
+    benchmark.name = clazz[0]
+    benchmark.group = f"Equality hit with prehashing ({get_input_identifier(input_)})"
+
+    item = make_cluster_from_tuple_tree(clazz[1], input_)
     hash(item)
 
     benchmark(check_equality, item, item)
 
 
 @pytest.mark.parametrize("clazz", approaches)
-@pytest.mark.parametrize("inputs", inputs)
-def test_equality_miss(clazz, inputs, benchmark):
+@pytest.mark.parametrize("input_", inputs)
+def test_equality_miss(clazz, input_, benchmark):
     benchmark.name = clazz[0]
-    benchmark.group = f"Collection equality miss"
+    benchmark.group = f"Equality miss ({get_input_identifier(input_)})"
 
-    item = clusterized(clazz[1], inputs)
-    other = item + (item[2],)
-    item = item + (item[0],)
+    item = make_cluster_from_tuple_tree(clazz[1], input_)
+    other = make_cluster_from_tuple_tree(clazz[1], non_input)
 
     benchmark(check_equality, item, other)
 
 
 @pytest.mark.parametrize("clazz", approaches)
-@pytest.mark.parametrize("inputs", inputs)
-def test_equality_miss_prehash(clazz, inputs, benchmark):
+@pytest.mark.parametrize("input_", inputs)
+def test_equality_miss_prehash(clazz, input_, benchmark):
     benchmark.name = clazz[0]
-    benchmark.group = f"Collection equality miss with prehashing"
+    benchmark.group = f"Equality miss with prehashing ({get_input_identifier(input_)})"
 
-    item = clusterized(clazz[1], inputs)
-    other = item + (item[2],)
-    item = item + (item[0],)
+    item = make_cluster_from_tuple_tree(clazz[1], input_)
+    other = make_cluster_from_tuple_tree(clazz[1], non_input)
     hash(item)
     hash(other)
 
@@ -202,12 +280,12 @@ def test_equality_miss_prehash(clazz, inputs, benchmark):
 
 
 @pytest.mark.parametrize("clazz", approaches)
-@pytest.mark.parametrize("inputs", inputs)
-def test_list_removal(clazz, inputs, benchmark):
+@pytest.mark.parametrize("input_list", input_lists)
+def test_list_removal(clazz, input_list, benchmark):
     benchmark.name = clazz[0]
     benchmark.group = f"List removal"
 
-    item = clusterized(clazz[1], inputs)
-    hash(item)
+    items = clusterized(clazz[1], input_list)
+    hash(items)
 
-    benchmark(check_list_removal, item, item[-1])
+    benchmark(check_list_removal, items, items[-1])
