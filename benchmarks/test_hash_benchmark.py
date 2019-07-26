@@ -47,6 +47,10 @@ def check_equality(x, y):
     x == y
 
 
+def check_containment(item, container):
+    item in container
+
+
 approaches = (("default", Cluster), ("hash", HashShortCircuitEquality))
 
 inputs = (
@@ -184,3 +188,57 @@ def test_equality_miss_prehash(clazz, input_, benchmark):
     hash(other)
 
     benchmark(check_equality, item, other)
+
+
+@pytest.mark.parametrize("clazz", approaches)
+def test_set_containment_hit(clazz, benchmark):
+    benchmark.name = clazz[0]
+    benchmark.group = (
+        f"Set containment hit"
+    )
+
+    clusterized_ = clusterized(clazz[1], inputs)
+    item_set = set(clusterized_)
+    item = clusterized_[0]
+
+    benchmark(check_containment, item, item_set)
+
+
+@pytest.mark.parametrize("clazz", approaches)
+def test_set_containment_miss(clazz, benchmark):
+    benchmark.name = clazz[0]
+    benchmark.group = (
+        f"Set containment miss"
+    )
+
+    item_set = set(clusterized(clazz[1], inputs))
+    item = make_cluster_from_tuple_tree(clazz[1], non_input)
+
+    benchmark(check_containment, item, item_set)
+
+
+@pytest.mark.parametrize("clazz", approaches)
+def test_dict_containment_hit(clazz, benchmark):
+    benchmark.name = clazz[0]
+    benchmark.group = (
+        f"Dict containment hit"
+    )
+
+    clusterized_ = clusterized(clazz[1], inputs)
+    item_dict = {cluster: 5.0 for cluster in clusterized_}
+    item = clusterized_[0]
+
+    benchmark(check_containment, item, item_dict)
+
+
+@pytest.mark.parametrize("clazz", approaches)
+def test_dict_containment_miss(clazz, benchmark):
+    benchmark.name = clazz[0]
+    benchmark.group = (
+        f"Dict containment miss"
+    )
+
+    item_dict = {cluster: 5.0 for cluster in clusterized(clazz[1], inputs)}
+    item = make_cluster_from_tuple_tree(clazz[1], non_input)
+
+    benchmark(check_containment, item, item_dict)
