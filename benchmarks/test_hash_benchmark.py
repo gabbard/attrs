@@ -16,7 +16,14 @@ class Cluster:
     children: Tuple[Tuple["Cluster", float], ...]
 
 
-@attrs(auto_attribs=True, frozen=True, slots=True, cmp=False, hash=True, cache_hash=True)
+@attrs(
+    auto_attribs=True,
+    frozen=True,
+    slots=True,
+    cmp=False,
+    hash=True,
+    cache_hash=True,
+)
 class HashShortCircuitEquality(Cluster):
     def __eq__(self, other):
         if self.__class__ != other.__class__:
@@ -31,8 +38,8 @@ class HashShortCircuitEquality(Cluster):
             return False
 
         return (
-                self.prototype == other.prototype and
-                self.children == other.children
+            self.prototype == other.prototype
+            and self.children == other.children
         )
 
 
@@ -40,10 +47,7 @@ def check_equality(x, y):
     x == y
 
 
-approaches = (
-    ("default", Cluster),
-    ("hash", HashShortCircuitEquality),
-)
+approaches = (("default", Cluster), ("hash", HashShortCircuitEquality))
 
 inputs = (
     (('scourge' * 50,),
@@ -110,6 +114,7 @@ non_input = \
          ((('brockton bay' * 50,), []), -6.8193039894104)]),
        -12.85853385925293)])
 
+
 def make_cluster_from_tuple_tree(clazz, tree) -> Cluster:
     prototype_mentions, raw_children = tree
     prototype = Entity(prototype_mentions)
@@ -143,7 +148,9 @@ def test_self_equality(clazz, input_, benchmark):
 @pytest.mark.parametrize("input_", inputs)
 def test_self_equality_prehashing(clazz, input_, benchmark):
     benchmark.name = clazz[0]
-    benchmark.group = f"Equality hit with prehashing ({get_input_identifier(input_)})"
+    benchmark.group = (
+        f"Equality hit with prehashing ({get_input_identifier(input_)})"
+    )
 
     item = make_cluster_from_tuple_tree(clazz[1], input_)
     hash(item)
@@ -167,7 +174,9 @@ def test_equality_miss(clazz, input_, benchmark):
 @pytest.mark.parametrize("input_", inputs)
 def test_equality_miss_prehash(clazz, input_, benchmark):
     benchmark.name = clazz[0]
-    benchmark.group = f"Equality miss with prehashing ({get_input_identifier(input_)})"
+    benchmark.group = (
+        f"Equality miss with prehashing ({get_input_identifier(input_)})"
+    )
 
     item = make_cluster_from_tuple_tree(clazz[1], input_)
     other = make_cluster_from_tuple_tree(clazz[1], non_input)
